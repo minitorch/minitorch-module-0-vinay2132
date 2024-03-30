@@ -9,9 +9,9 @@ class Module:
     submodules. They make up the basis of neural network stacks.
 
     Attributes:
-        _modules : Storage of the child modules
-        _parameters : Storage of the module's parameters
-        training : Whether the module is in training mode or evaluation mode
+        _modules (dict of name x :class:`Module`): Storage of the child modules
+        _parameters (dict of name x :class:`Parameter`): Storage of the module's parameters
+        training (bool): Whether the module is in training mode or evaluation mode
 
     """
 
@@ -24,20 +24,29 @@ class Module:
         self._parameters = {}
         self.training = True
 
+    # def modules(self) -> Sequence[Module]:
+    #     "Return the direct child modules of this module."
+    #     return self.__dict__["_modules"].values()
+
     def modules(self) -> Sequence[Module]:
         "Return the direct child modules of this module."
         m: Dict[str, Module] = self.__dict__["_modules"]
         return list(m.values())
 
     def train(self) -> None:
-        "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        """Set the mode of this module and all descendent modules to `train`."""
+        self.training = True  # Set current module to train mode
+
+        # Iterate through descendant modules and set them to train mode
+        for m in self.modules():
+            m.train()
 
     def eval(self) -> None:
         "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+
+        self.training = False  # Set current module to eval mode
+        for m in self.modules():  # Iterate through child modules
+            m.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
@@ -45,26 +54,38 @@ class Module:
 
 
         Returns:
-            The name and `Parameter` of each ancestor parameter.
+            list of pairs: Contains the name and :class:`Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+
+        def _named_parameters(module: Any, prefix: str = "") -> Any:
+            for name, param in module._parameters.items():
+                yield prefix + name, param
+            for name, module in module._modules.items():
+                yield from _named_parameters(module, prefix + name + ".")
+
+        return list(_named_parameters(self))
 
     def parameters(self) -> Sequence[Parameter]:
         "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
 
-    def add_parameter(self, k: str, v: Any) -> Parameter:
+        # def _parameters(module):
+        #     for param in module._parameters.values():
+        #         yield param
+        #     for module in module._modules.values():
+        #         yield from _parameters(module)
+
+        return [param for _, param in self.named_parameters()]
+
+    def add_parameter(self, k: str, v: Optional[Any]) -> Parameter:
         """
         Manually add a parameter. Useful helper for scalar parameters.
 
         Args:
-            k: Local name of the parameter.
-            v: Value for the parameter.
+            k (str): Local name of the parameter.
+            v (value): Value for the parameter.
 
         Returns:
-            Newly created parameter.
+            Parameter: Newly created parameter.
         """
         val = Parameter(v, k)
         self.__dict__["_parameters"][k] = val
@@ -84,10 +105,12 @@ class Module:
 
         if key in self.__dict__["_modules"]:
             return self.__dict__["_modules"][key]
-        return None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return self.forward(*args, **kwargs)
+
+    def forward(self) -> int:
+        assert False, "Not Implemented"
 
     def __repr__(self) -> str:
         def _addindent(s_: str, numSpaces: int) -> str:
