@@ -85,6 +85,17 @@ class Module2(minitorch.Module):
         for i in range(extra):
             self.add_parameter(f"extra_parameter_{i}", 0)
 
+    # def add_parameter(self, k: str, v: Any) -> None:
+    #     """
+    #     Manually add a parameter. Useful helper for scalar parameters.
+
+    #     Args:
+    #         k: Local name of the parameter.
+    #         v: Value for the parameter.
+    #     """
+    #     val = minitorch.Parameter(v, k)
+    #     self.__dict__["_parameters"][k] = val
+
 
 class Module3(minitorch.Module):
     def __init__(self) -> None:
@@ -182,3 +193,4 @@ def test_parameter() -> None:
     t2 = MockParam()
     q.update(t2)
     assert t2.x
+    
